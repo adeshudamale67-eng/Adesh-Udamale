@@ -1,27 +1,83 @@
 import streamlit as st
+
 st.set_page_config(
     page_title="Smart Agriculture Advisor",
     page_icon="🌱",
     layout="wide"
 )
-# Header
+
+# ---------------- START SCREEN ----------------
+
+if "started" not in st.session_state:
+    st.session_state.started = False
+
+if not st.session_state.started:
+
+    st.markdown(
+        """
+        <div style="text-align:center; padding-top:120px;">
+            <div style="font-size:80px;">🌱</div>
+            <h1>Smart Agriculture Advisor</h1>
+            <h3>Technology for Better Farming</h3>
+            <p style="font-size:18px;">
+                Get suitable crop recommendations using soil and weather conditions.
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.write("")
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        if st.button(
+            "🚀 Start Now",
+            use_container_width=True,
+            type="primary"
+        ):
+            st.session_state.started = True
+            st.rerun()
+
+    st.stop()
+
+
+# ---------------- MAIN PROJECT ----------------
+
 st.title("🌱 Smart Agriculture Advisor")
 st.subheader("Technology for Better Farming")
+
 st.write(
     "Enter soil and weather conditions to get a suitable crop recommendation."
 )
+
 st.divider()
-# Input Section
+
 st.header("🌾 Enter Agricultural Details")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
-    nitrogen = st.number_input("Nitrogen (N)", min_value=0.0, value=80.0)
-    phosphorus = st.number_input("Phosphorus (P)", min_value=0.0, value=45.0)
+    nitrogen = st.number_input(
+        "Nitrogen (N)",
+        min_value=0.0,
+        value=80.0
+    )
+
+    phosphorus = st.number_input(
+        "Phosphorus (P)",
+        min_value=0.0,
+        value=45.0
+    )
 
 with col2:
-    potassium = st.number_input("Potassium (K)", min_value=0.0, value=40.0)
+    potassium = st.number_input(
+        "Potassium (K)",
+        min_value=0.0,
+        value=40.0
+    )
+
     ph = st.number_input(
         "pH Value",
         min_value=0.0,
@@ -34,6 +90,7 @@ with col3:
         "Temperature (°C)",
         value=26.0
     )
+
     rainfall = st.number_input(
         "Rainfall (mm)",
         min_value=0.0,
@@ -42,10 +99,11 @@ with col3:
 
 st.write("")
 
-# Prediction Function
+
+# ---------------- CROP PREDICTION ----------------
+
 def predict_crop(n, p, k, ph, temperature, rainfall):
 
-    # Sample recommendation logic
     if rainfall > 220 and temperature > 24:
         crop = "Rice"
         tips = [
@@ -89,8 +147,12 @@ def predict_crop(n, p, k, ph, temperature, rainfall):
     return crop, tips
 
 
-# Predict Button
-if st.button("🤖 Predict Suitable Crop", use_container_width=True):
+# ---------------- PREDICT BUTTON ----------------
+
+if st.button(
+    "🤖 Predict Suitable Crop",
+    use_container_width=True
+):
 
     crop, tips = predict_crop(
         nitrogen,
@@ -103,18 +165,19 @@ if st.button("🤖 Predict Suitable Crop", use_container_width=True):
 
     st.divider()
 
-    # Result
     st.success("Prediction Completed Successfully!")
 
     st.header("📊 Prediction Result")
 
     st.markdown(
         f"""
-        ## 🌱 Recommended Crop: **{crop}**
+        ## 🌱 Recommended Crop: *{crop}*
         """
     )
 
-    st.info("Recommended for the given soil and weather conditions.")
+    st.info(
+        "Recommended for the given soil and weather conditions."
+    )
 
     # Input Summary
     st.subheader("📋 Input Summary")
@@ -130,14 +193,22 @@ if st.button("🤖 Predict Suitable Crop", use_container_width=True):
         st.metric("pH", ph)
 
     with c3:
-        st.metric("Temperature", f"{temperature} °C")
-        st.metric("Rainfall", f"{rainfall} mm")
+        st.metric(
+            "Temperature",
+            f"{temperature} °C"
+        )
 
-    # Recommendation
+        st.metric(
+            "Rainfall",
+            f"{rainfall} mm"
+        )
+
+    # Recommendations
     st.subheader("💡 Farming Recommendations")
 
     for tip in tips:
         st.write("✅", tip)
+
 
 st.divider()
 
