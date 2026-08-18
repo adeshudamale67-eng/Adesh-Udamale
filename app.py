@@ -71,7 +71,7 @@ def create_account(
     email,
     mobile,
     password,
-    location
+    
 ):
     conn = sqlite3.connect("farmers.db")
     cursor = conn.cursor()
@@ -79,7 +79,7 @@ def create_account(
         cursor.execute(
             """
             INSERT INTO farmers
-            (name, email, mobile, password, location)
+            (name, email, mobile, password)
             VALUES (?, ?, ?, ?, ?)
             """,
             (
@@ -104,7 +104,7 @@ def login_user(email, password):
     cursor = conn.cursor()
     cursor.execute(
         """
-        SELECT name, email, location
+        SELECT name, email
         FROM farmers
         WHERE email = ? AND password = ?
         """,
