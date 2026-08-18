@@ -355,12 +355,12 @@ if st.session_state.page == "dashboard":
         nitrogen = st.number_input(
             "Nitrogen (N)",
             min_value=0.0,
-            value=80.0
+            value=00.0
         )
         phosphorus = st.number_input(
             "Phosphorus (P)",
             min_value=0.0,
-            value=45.0
+            value=00.0
         )
     # -----------------------------------------------------
     # COLUMN 2
@@ -369,13 +369,13 @@ if st.session_state.page == "dashboard":
         potassium = st.number_input(
             "Potassium (K)",
             min_value=0.0,
-            value=40.0
+            value=00.0
         )
         ph = st.number_input(
             "pH Value",
             min_value=0.0,
             max_value=14.0,
-            value=6.5
+            value=00.00
         )
     # -----------------------------------------------------
     # COLUMN 3
@@ -383,12 +383,12 @@ if st.session_state.page == "dashboard":
     with col3:
         temperature = st.number_input(
             "Temperature (°C)",
-            value=26.0
+            value=00.00
         )
         rainfall = st.number_input(
             "Rainfall (mm)",
             min_value=0.0,
-            value=180.0
+            value=00.00
         )
     st.write("")
     # =====================================================
