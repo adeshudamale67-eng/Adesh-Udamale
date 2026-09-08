@@ -746,5 +746,5 @@ if st.session_state.page == "dashboard":
 
     st.caption(
         "Smart Agriculture Advisor | "
-        "AI/ML Project Demo"
+        "AI/ML Project By Adesh Udamale"
     )
