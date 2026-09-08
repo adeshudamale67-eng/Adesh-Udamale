@@ -218,7 +218,7 @@ if st.session_state.page == "welcome":
     with col2:
 
         if st.button(
-            "🚀Tap TO Start Prediction",
+            "🚀Tap To Start Prediction",
             use_container_width=True,
             type="primary"
         ):
