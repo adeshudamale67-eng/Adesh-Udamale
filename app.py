@@ -231,7 +231,7 @@ if st.session_state.page == "welcome":
     st.write("")
 
     st.caption(
-        "Smart Agriculture Advisor | AI/ML Project BY Adesh Udamale"
+        "Smart Agriculture Advisor | AI/ML Project By Adesh Udamale"
     )
 
     st.stop()
