@@ -504,13 +504,13 @@ if st.session_state.page == "dashboard":
         nitrogen = st.number_input(
             "Nitrogen (N)",
             min_value=0.0,
-            value=80.0
+            value=00.0
         )
 
         phosphorus = st.number_input(
             "Phosphorus (P)",
             min_value=0.0,
-            value=45.0
+            value=00.0
         )
 
 
@@ -523,7 +523,7 @@ if st.session_state.page == "dashboard":
         potassium = st.number_input(
             "Potassium (K)",
             min_value=0.0,
-            value=40.0
+            value=00.0
         )
 
         ph = st.number_input(
