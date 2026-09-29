@@ -530,7 +530,7 @@ if st.session_state.page == "dashboard":
             "pH Value",
             min_value=0.0,
             max_value=14.0,
-            value=6.5
+            value=00.0
         )
 
 
@@ -542,13 +542,13 @@ if st.session_state.page == "dashboard":
 
         temperature = st.number_input(
             "Temperature (°C)",
-            value=26.0
+            value=00.0
         )
 
         rainfall = st.number_input(
             "Rainfall (mm)",
             min_value=0.0,
-            value=180.0
+            value=00.0
         )
 
 
