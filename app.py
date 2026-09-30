@@ -2,6 +2,7 @@ import streamlit as st
 import sqlite3
 import hashlib
 
+
 # =========================================================
 # PAGE CONFIGURATION
 # =========================================================
@@ -56,6 +57,7 @@ def init_database():
     conn = sqlite3.connect("farmers.db")
     cursor = conn.cursor()
 
+    # Normal email/password users
     cursor.execute(
         """
         CREATE TABLE IF NOT EXISTS farmers (
@@ -64,6 +66,20 @@ def init_database():
             email TEXT UNIQUE NOT NULL,
             mobile TEXT NOT NULL,
             password TEXT NOT NULL,
+            location TEXT
+        )
+        """
+    )
+
+    # Google/OIDC users
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS google_users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            google_sub TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            picture TEXT,
             location TEXT
         )
         """
@@ -130,7 +146,7 @@ def create_account(
 
 
 # =========================================================
-# LOGIN
+# NORMAL LOGIN
 # =========================================================
 
 def login_user(email, password):
@@ -148,6 +164,125 @@ def login_user(email, password):
             email,
             hash_password(password)
         )
+    )
+
+    user = cursor.fetchone()
+
+    conn.close()
+
+    return user
+
+
+# =========================================================
+# GOOGLE USER DATABASE SYNC
+# =========================================================
+
+def sync_google_user():
+
+    # Get verified Google/OIDC information
+    name = (
+        getattr(st.user, "name", None)
+        or getattr(st.user, "given_name", None)
+        or "Google User"
+    )
+
+    email = getattr(st.user, "email", None)
+    google_sub = getattr(st.user, "sub", None)
+    picture = getattr(st.user, "picture", None)
+
+    if not email or not google_sub:
+        return None
+
+    conn = sqlite3.connect("farmers.db")
+    cursor = conn.cursor()
+
+    # Check Google subject
+    cursor.execute(
+        """
+        SELECT name, email, location
+        FROM google_users
+        WHERE google_sub = ?
+        """,
+        (google_sub,)
+    )
+
+    user = cursor.fetchone()
+
+    # Existing Google account
+    if user:
+
+        cursor.execute(
+            """
+            UPDATE google_users
+            SET name = ?, email = ?, picture = ?
+            WHERE google_sub = ?
+            """,
+            (
+                name,
+                email,
+                picture,
+                google_sub
+            )
+        )
+
+    else:
+
+        # Check whether same email already exists
+        cursor.execute(
+            """
+            SELECT name, email, location
+            FROM google_users
+            WHERE email = ?
+            """,
+            (email,)
+        )
+
+        existing_user = cursor.fetchone()
+
+        if existing_user:
+
+            cursor.execute(
+                """
+                UPDATE google_users
+                SET google_sub = ?, name = ?, picture = ?
+                WHERE email = ?
+                """,
+                (
+                    google_sub,
+                    name,
+                    picture,
+                    email
+                )
+            )
+
+        else:
+
+            # Create new Google account
+            cursor.execute(
+                """
+                INSERT INTO google_users
+                (google_sub, name, email, picture, location)
+                VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    google_sub,
+                    name,
+                    email,
+                    picture,
+                    ""
+                )
+            )
+
+    conn.commit()
+
+    # Get final user information
+    cursor.execute(
+        """
+        SELECT name, email, location
+        FROM google_users
+        WHERE google_sub = ?
+        """,
+        (google_sub,)
     )
 
     user = cursor.fetchone()
@@ -176,6 +311,20 @@ if "page" not in st.session_state:
 if "user" not in st.session_state:
 
     st.session_state.user = None
+
+
+# =========================================================
+# GOOGLE LOGIN SESSION CHECK
+# =========================================================
+
+if getattr(st.user, "is_logged_in", False):
+
+    google_user = sync_google_user()
+
+    if google_user:
+
+        st.session_state.user = google_user
+        st.session_state.page = "dashboard"
 
 
 # =========================================================
@@ -218,7 +367,7 @@ if st.session_state.page == "welcome":
     with col2:
 
         if st.button(
-            "🚀Tap To Start Prediction",
+            "🚀 Tap To Start Prediction",
             use_container_width=True,
             type="primary"
         ):
@@ -256,9 +405,10 @@ if st.session_state.page == "login":
 
     st.divider()
 
-    # -----------------------------------------------------
+
+    # =====================================================
     # TABS
-    # -----------------------------------------------------
+    # =====================================================
 
     tab1, tab2 = st.tabs(
         [
@@ -277,6 +427,30 @@ if st.session_state.page == "login":
         st.subheader(
             "Login to Your Account"
         )
+
+
+        # -------------------------------------------------
+        # GOOGLE LOGIN
+        # -------------------------------------------------
+
+        if st.button(
+            "🔵 Continue with Google",
+            use_container_width=True
+        ):
+
+            st.login()
+
+
+        st.caption(
+            "Secure login using your Google account."
+        )
+
+        st.divider()
+
+
+        # -------------------------------------------------
+        # EMAIL LOGIN
+        # -------------------------------------------------
 
         email = st.text_input(
             "📧 Email",
@@ -313,7 +487,6 @@ if st.session_state.page == "login":
                 if user:
 
                     st.session_state.user = user
-
                     st.session_state.page = "dashboard"
 
                     st.success(
@@ -419,6 +592,7 @@ if st.session_state.page == "login":
                         "An account with this email already exists."
                     )
 
+
     st.divider()
 
     if st.button(
@@ -466,17 +640,21 @@ if st.session_state.page == "dashboard":
     )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # LOGOUT
-    # -----------------------------------------------------
+    # =====================================================
 
     if st.button(
         "🚪 Logout"
     ):
 
         st.session_state.user = None
-
         st.session_state.page = "login"
+
+        # Logout from Google/OIDC session
+        if getattr(st.user, "is_logged_in", False):
+
+            st.logout()
 
         st.rerun()
 
@@ -495,60 +673,60 @@ if st.session_state.page == "dashboard":
     col1, col2, col3 = st.columns(3)
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # COLUMN 1
-    # -----------------------------------------------------
+    # =====================================================
 
     with col1:
 
         nitrogen = st.number_input(
             "Nitrogen (N)",
             min_value=0.0,
-            value=00.0
+            value=0.0
         )
 
         phosphorus = st.number_input(
             "Phosphorus (P)",
             min_value=0.0,
-            value=00.0
+            value=0.0
         )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # COLUMN 2
-    # -----------------------------------------------------
+    # =====================================================
 
     with col2:
 
         potassium = st.number_input(
             "Potassium (K)",
             min_value=0.0,
-            value=00.0
+            value=0.0
         )
 
         ph = st.number_input(
             "pH Value",
             min_value=0.0,
             max_value=14.0,
-            value=00.0
+            value=0.0
         )
 
 
-    # -----------------------------------------------------
+    # =====================================================
     # COLUMN 3
-    # -----------------------------------------------------
+    # =====================================================
 
     with col3:
 
         temperature = st.number_input(
             "Temperature (°C)",
-            value=00.0
+            value=0.0
         )
 
         rainfall = st.number_input(
             "Rainfall (mm)",
             min_value=0.0,
-            value=00.0
+            value=0.0
         )
 
 
@@ -578,7 +756,6 @@ if st.session_state.page == "dashboard":
                 "Use balanced nutrients based on soil testing."
             ]
 
-
         elif temperature > 27 and rainfall > 120:
 
             crop = "Maize"
@@ -589,7 +766,6 @@ if st.session_state.page == "dashboard":
                 "Control weeds during early growth."
             ]
 
-
         elif rainfall < 100 and temperature > 25:
 
             crop = "Millet"
@@ -599,7 +775,6 @@ if st.session_state.page == "dashboard":
                 "Maintain suitable soil moisture.",
                 "Choose a locally suitable variety."
             ]
-
 
         elif (
             6 <= ph <= 7.5
@@ -614,7 +789,6 @@ if st.session_state.page == "dashboard":
                 "Monitor soil moisture regularly."
             ]
 
-
         else:
 
             crop = "Wheat"
@@ -624,7 +798,6 @@ if st.session_state.page == "dashboard":
                 "Maintain proper irrigation.",
                 "Follow local agricultural guidance."
             ]
-
 
         return crop, tips
 
