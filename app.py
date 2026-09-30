@@ -429,25 +429,7 @@ if st.session_state.page == "login":
         )
 
 
-        # -------------------------------------------------
-        # GOOGLE LOGIN
-        # -------------------------------------------------
-
-        if st.button(
-            "🔵 Continue with Google",
-            use_container_width=True
-        ):
-
-            st.login()
-
-
-        st.caption(
-            "Secure login using your Google account."
-        )
-
-        st.divider()
-
-
+       
         # -------------------------------------------------
         # EMAIL LOGIN
         # -------------------------------------------------
